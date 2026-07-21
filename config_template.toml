@@ -1,0 +1,10 @@
+
+[mapper]
+    topic_pattern = "{gw}/{DeviceID}/{type}"    # only the DeviceID field matters, the rest are wildcard placeholders
+
+
+[mapping.<id>]
+    type = "<product_code>"
+    identifier = "string"
+    output_topic = "topic/here/{identifier}"
+    multi_sample_offset_s = 5

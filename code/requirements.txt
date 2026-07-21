@@ -1,0 +1,7 @@
+paho-mqtt==1.6.1
+chevron==0.14.0
+tomli==2.0.1
+pyzmq==27.0.1
+jsonpath-rw==1.4.0
+packaging==23.2 
+jsonschema[format-nongpl]==4.21.1 

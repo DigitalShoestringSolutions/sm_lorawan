@@ -1,0 +1,241 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Data Collection Service Module Config Schema",
+    "description": "A representation of the expected format for the config file for this service module",
+    "type": "object",
+    "properties": {
+        "interface": {
+            "description": "Set of interfaces",
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "description": "Name of the interface",
+                    "type": "object",
+                    "properties": {
+                        "module": {
+                            "description": "Name / path of the interface module to import",
+                            "type": "string"
+                        },
+                        "class": {
+                            "description": "Name of the interface class to use",
+                            "type": "string"
+                        },
+                        "config":{
+                            "description":"Additional config specific to the interface module",
+                            "type":"object"
+                        }
+                    },
+                    "required":[
+                        "module",
+                        "class"
+                    ]
+                }
+            }
+        },
+        "device": {
+            "description": "Set of devices",
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "description": "Name of the device",
+                    "type": "object",
+                    "properties": {
+                        "module": {
+                            "description": "Name / path of the device module to import",
+                            "type": "string"
+                        },
+                        "class": {
+                            "description": "Name of the device class to use",
+                            "type": "string"
+                        },
+                        "interface": {
+                            "description": "Name of the interface this device uses",
+                            "type": "string"
+                        },
+                        "config":{
+                            "description":"Additional config specific to the device module",
+                            "type":"object"
+                        },
+                        "variables":{
+                            "description":"Links the inputs and outputs of the module to named variables on its sensing stacks blackboard",
+                            "type":"object"
+                        }
+                    },
+                    "required":[
+                        "module",
+                        "class",
+                        "variables"
+                    ]
+                }
+            }
+        },
+        "calculation": {
+            "description": "Set of calculations",
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "description": "Name of the calculation",
+                    "type": "object",
+                    "properties": {
+                        "module": {
+                            "description": "Name / path of the calculation module to import",
+                            "type": "string"
+                        },
+                        "class": {
+                            "description": "Name of the calculation class to use",
+                            "type": "string"
+                        },
+                        "config":{
+                            "description":"Additional config specific to the calculation module",
+                            "type":"object"
+                        },
+                        "variables":{
+                            "description":"Links the inputs and outputs of the module to named variables on its sensing stacks blackboard",
+                            "type":"object"
+                        }
+                    },
+                    "required":[
+                        "module",
+                        "class",
+                        "variables"
+                    ]
+                }
+            }
+        },
+        "pipelines": {
+            "description": "Specifies one or more calculation pipelines that can be used in sensing stacks",
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "description": "Name of the pipeline",
+                    "type": "array",
+                    "items": {
+                        "description": "List of calculations in the pipeline (in reverse order)",
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "measurement": {
+            "description": "Specifies the measurement policy for the service module",
+            "type": "object",
+            "properties": {
+                "module": {
+                    "description": "Name / path of the module to import",
+                    "type": "string"
+                },
+                "class": {
+                    "description": "Name of the class to use",
+                    "type": "string"
+                },
+                "config": {
+                    "description": "Additional config for the chosen class",
+                    "type": "object"
+                },
+                "sensing_stacks": {
+                    "description": "List of sensing stacks for this measurement",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "device": {
+                                "description": "Device sampled for this sensing stack",
+                                "type": "string"
+                            },
+                            "pipeline": {
+                                "description": "Calculation pipeline applied to the sample",
+                                "type": "string"
+                            },
+                            "constants": {
+                                "description": "Additional constants to add to the output from this sensing stack",
+                                "type": "object"
+                            },
+                            "prefix": {
+                                "description": "prefix to add to all variables output from this sensing stack",
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "device",
+                            "pipeline"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "module",
+                "class",
+                "sensing_stacks"
+            ]
+        },
+        "output": {
+            "description": "Specifies the outputs from this service module",
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "description": "name of the output",
+                    "type": "object",
+                    "properties": {
+                        "topic": {
+                            "description": "Topic to publish this output on (must be valid MQTT topic)",
+                            "type": "string",
+                            "pattern": "^([^#+$/]*\/?)+[^#+$/]*$"
+                        },
+                        "message_spec": {
+                            "description": "Message specification for this output",
+                            "type": "object",
+                            "minProperties": 1
+                        }
+                    },
+                    "required": [
+                        "topic",
+                        "message_spec"
+                    ]
+                }
+            }
+        },
+        "mqtt": {
+            "type": "object",
+            "description": "Contains the configuration for the MQTT client",
+            "properties": {
+                "broker": {
+                    "description": "URL of the mqtt broker",
+                    "type": "string"
+                },
+                "port": {
+                    "description": "Port to use when connecting to the broker",
+                    "type": "integer"
+                },
+                "topic_prefix": {
+                    "description": "prefix to prepend to the topic of all published messages",
+                    "type": "string"
+                },
+                "reconnect": {
+                    "description": "Reconnect characteristics",
+                    "type": "object",
+                    "properties": {
+                        "initial": {
+                            "description": "Initial delay before attempting to reconnect (in seconds)",
+                            "type": "number",
+                            "minimum": 0
+                        },
+                        "backoff": {
+                            "description": "Multiplier by which the delay increases on each failed reconnect",
+                            "type": "number",
+                            "minimum": 1
+                        },
+                        "limit": {
+                            "description": "Upper limit on the delay between reconnect attempts (in seconds)",
+                            "type": "integer",
+                            "minimum": 0
+                        }
+                    }
+                }
+            },
+            "required": [
+                "broker",
+                "port"
+            ]
+        }
+    }
+}
