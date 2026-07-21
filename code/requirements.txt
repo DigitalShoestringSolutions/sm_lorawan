@@ -1,4 +1,4 @@
-paho-mqtt==1.6.1
+paho-mqtt==2.1.0
 chevron==0.14.0
 tomli==2.0.1
 pyzmq==27.0.1
