@@ -1,4 +1,4 @@
-import util
+import decoders.util as util
 
 class sw3l:
     @classmethod

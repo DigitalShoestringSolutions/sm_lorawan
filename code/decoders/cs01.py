@@ -1,4 +1,4 @@
-import util
+import decoders.util as util
 import logging
 
 logger = logging.getLogger(__name__)
