@@ -142,6 +142,8 @@ class LorawanMapper(multiprocessing.Process):
                 decoded = decoders.lse01.decode(payload)
             case "json_payload", "sw3l":
                 decoded = decoders.sw3l.decode(payload)
+            case "json_payload", "s31b":
+                decoded = decoders.s31b.decode(payload)
             case _:
                 # default
                 logger.error(
