@@ -35,8 +35,8 @@ class MQTTInputWrapper(multiprocessing.Process):
         self.initial = mqtt_conf_reconnect.get("initial", 5)
         self.backoff = mqtt_conf_reconnect.get("backoff", 2)
         self.limit = mqtt_conf_reconnect.get("limit", 60)
-        
-        self.subscriptions = []
+
+        self.subscriptions = mqtt_conf.get("subscriptions", [])
 
         # declarations
         self.zmq_conf = zmq_conf
