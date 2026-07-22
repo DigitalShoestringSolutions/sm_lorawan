@@ -70,7 +70,7 @@ class MQTTInputWrapper(multiprocessing.Process):
                 else:
                     timeout = self.limit
 
-    def on_disconnect(self, client, _userdata, rc):
+    def on_disconnect(self, client, userdata, disconnect_flags, rc, properties=None):
         if rc != 0:
             logger.error(f"Unexpected MQTT disconnection (rc:{rc}), reconnecting...")
             self.mqtt_connect(client)
@@ -84,6 +84,8 @@ class MQTTInputWrapper(multiprocessing.Process):
         client.on_connect = self.mqtt_on_connect
         client.on_message = self.mqtt_on_message
         client.on_disconnect = self.on_disconnect
+
+        # client.reconnect_delay_set(min_delay=self.initial, max_delay=self.limit)
 
         # self.client.tls_set('ca.cert.pem',tls_version=2)
         logger.info(f"connecting to {self.url}:{self.port}")
@@ -101,6 +103,12 @@ class MQTTInputWrapper(multiprocessing.Process):
             client.subscribe(topic)
 
     def mqtt_on_message(self, client: MQTTClient, userdata, msg):
-        output = {'topic': msg.topic, 'payload': msg.payload}
-        logger.debug(f"Forwarding {output}")
-        self.zmq_out.send_json(output)
+        try:
+            # Safely decode binary payload to string so json serialization works
+            payload_str = msg.payload.decode("utf-8", errors="replace")
+
+            output = {"topic": msg.topic, "payload": payload_str}
+            logger.debug(f"Forwarding message on topic: {msg.topic}")
+            self.zmq_out.send_json(output)
+        except Exception as e:
+            logger.error(f"Failed to process/forward MQTT message: {e}")
