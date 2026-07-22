@@ -1,14 +1,15 @@
 import decoders.util as util
 
-class llms01:
+class lse01:
     @classmethod
-    def decode(cls,payload:dict):
+    def decode(cls, payload: dict):
         battery_v = util.get_battery_v(payload)
         return {
             "battery_v": battery_v,
-            "leaf_moisture": payload.get("Leaf_Moisture"),
-            "leaf_temperature_c": payload.get("Leaf_Temperature"),
+            "soil_temperature_c": payload.get("Temp_SOIL"),
+            "soil_water": payload.get("Water_SOIL"),
+            "soil_conductivity": payload.get("Conduct_SOIL"),
             "external_temperature_c": payload.get("Temp_DS18B20"),
-            "message_type": payload.get("Message_type"),
+            "sensor_flag": payload.get("Sensor_flag"),
             "interrupt_flag": payload.get("Interrupt_flag"),
         }
