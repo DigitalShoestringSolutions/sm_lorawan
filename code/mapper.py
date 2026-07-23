@@ -84,7 +84,6 @@ class LorawanMapper(multiprocessing.Process):
             logger.warning(f"No mapping for {device_id}")
             return None, None
 
-        out_topic = mapping["output_topic"]
         out_msg = {"identifier": mapping["identifier"]}
         mapping_type = mapping["type"]
 
@@ -150,6 +149,12 @@ class LorawanMapper(multiprocessing.Process):
                     f"Mapping implementation not found for {payload_type},{mapping_type}"
                 )
                 return None, None
+            
+        out_topic = mapping["output_topic"]
+        
+        # match(mapping_type):
+        #     case "lht65n_vib":
+        #         out_topic = "a/{identifier}"
 
         # Handle single dictionary payload
         if isinstance(decoded, dict):

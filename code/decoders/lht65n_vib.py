@@ -22,24 +22,10 @@ class lht65n_vib:
             bytes 7:11 = work_min
         """
 
-        sensor_type = "LHT65N-VIB vibration"
-        conversion = (
-            "LHT65N-VIB raw hex: battery_v = battery_mV / 1000; "
-            "vib_mode = (flag >> 2) & 7; "
-            "for mode 1, vib_count and work_min are unsigned 32-bit big-endian values"
-        )
 
         if len(sensor_payload) < 11:
             return {
-                "device_label": "LHT65N-VIB vibration",
-                "sensor_type": sensor_type,
-                "decode_status": "error",
-                "conversion_applied": conversion,
-                "radio": {},
-                "data": {
-                    "error": f"Expected at least 11 sensor bytes, got {len(sensor_payload)}",
-                    "sensor_payload_hex": sensor_payload.hex(),
-                },
+                    "error": f"Expected at least 11 sensor bytes, got {len(sensor_payload)}"
             }
 
         battery_v = decoders.util.uint16_be(sensor_payload[0:2]) / 1000.0
@@ -79,11 +65,4 @@ class lht65n_vib:
             decoded_data["warning"] = f"Unsupported or unexpected VIB mode: {vib_mode}"
             decoded_data["sensor_payload_hex"] = sensor_payload.hex()
 
-        return {
-            "device_label": "LHT65N-VIB vibration",
-            "sensor_type": sensor_type,
-            "decode_status": "ok",
-            "conversion_applied": conversion,
-            "radio": {},
-            "data": decoded_data,
-        }
+        return decoded_data

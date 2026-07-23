@@ -10,3 +10,8 @@ class s31b:
             "temperature_c": payload.get("TempC_SHT"),
             "humidity_percent": payload.get("Hum_SHT"),
         }
+
+class s31b_ascii:
+    @classmethod
+    def decode(cls, payload: dict):
+        pass
