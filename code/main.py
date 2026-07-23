@@ -22,12 +22,12 @@ def create_building_blocks(config):
     bbs = {}
 
     mqtt_in_outbound = {
-        "type": zmq.PULL,
+        "type": zmq.PUSH,
         "address": "tcp://127.0.0.1:4000",
         "bind": True,
     }
 
-    mapper_in = {"type": zmq.PUSH, "address": "tcp://127.0.0.1:4000", "bind": False}
+    mapper_in = {"type": zmq.PULL, "address": "tcp://127.0.0.1:4000", "bind": False}
     mapper_out = {"type": zmq.PUSH, "address": "tcp://127.0.0.1:4001", "bind": True}
     mqtt_out_inbound = {
         "type": zmq.PULL,
