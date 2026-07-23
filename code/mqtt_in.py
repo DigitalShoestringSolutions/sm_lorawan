@@ -108,7 +108,7 @@ class MQTTInputWrapper(multiprocessing.Process):
             payload_str = msg.payload.decode("utf-8", errors="replace")
 
             output = {"topic": msg.topic, "payload": payload_str}
-            logger.debug(f"Forwarding message on topic: {msg.topic}")
+            logger.debug(f"Forwarding {output}")
             self.zmq_out.send_json(output)
         except Exception as e:
             logger.error(f"Failed to process/forward MQTT message: {e}")
