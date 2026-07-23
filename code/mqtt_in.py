@@ -111,4 +111,4 @@ class MQTTInputWrapper(multiprocessing.Process):
             logger.debug(f"Forwarding {output}")
             self.zmq_out.send_json(output)
         except Exception as e:
-            logger.error(f"Failed to process/forward MQTT message: {e}")
+            logger.error(f"Failed to process/forward MQTT message: {e}", exc_info=True)
