@@ -207,7 +207,7 @@ class LorawanMapper(multiprocessing.Process):
             case "s31b":
                 out_topic = "temperature/{identifier}"
             case "cs01":
-                out_topic = "current/{identifier}"
+                out_topic = "power_monitoring/{identifier}/{phase}"
             case _:
                 out_topic = mapping.get("output_topic")
 
