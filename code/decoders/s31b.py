@@ -22,11 +22,10 @@ class s31b_ascii:
 
         battery_v = util.uint16_be(sensor_payload[0:2]) / 1000.0
 
-        temperature = util.int16_be(sensor_payload[2:4]) / 10
-        humidity = util.uint16_be(sensor_payload[4:6]) / 10
+        temperature = util.int16_be(sensor_payload[7:9]) / 10
+        humidity = util.uint16_be(sensor_payload[9:11]) / 10
         # alarm = sensor_payload[6]
-        # datalog_flag = sensor_payload[7]
-        # timesync_offset = sensor_payload[8:11]
+        # timesync_offset = sensor_payload[2:6]
 
         return battery_v, {
             "temperature_c": temperature,
