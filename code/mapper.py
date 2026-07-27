@@ -93,7 +93,11 @@ class LorawanMapper(multiprocessing.Process):
             logger.warning(f"No mapping for {device_id}")
             return []
 
-        out_msg = {"identifier": mapping["identifier"]}
+        identifier_tag = mapping.get("identifier_tag",None)
+        identifier = mapping["identifier"]
+        out_msg = {"identifier": identifier}
+        if identifier_tag is not None:
+            out_msg[identifier_tag] = identifier
         mapping_type = mapping["type"]
 
         # 1. Ensure payload_raw is a clean string (handles both str and bytes inputs)
@@ -143,7 +147,7 @@ class LorawanMapper(multiprocessing.Process):
                 MQTTMessage(
                     "radio/{identifier}",
                     {
-                        "identifier": mapping["identifier"],
+                        "identifier": identifier,
                         "timestamp": get_timestamp(),
                         **radio_prefix,
                     },
@@ -181,7 +185,7 @@ class LorawanMapper(multiprocessing.Process):
                 MQTTMessage(
                     "battery/{identifier}",
                     {
-                        "identifier": mapping["identifier"],
+                        "identifier": identifier,
                         "timestamp": get_timestamp(),
                         "battery_v": battery_v,
                     },
@@ -222,10 +226,10 @@ class LorawanMapper(multiprocessing.Process):
                 get_current_datetime()
             )  # Assumes datetime object or numeric timestamp
 
-            num_samples = len(decoded)
-            for idx, entry in enumerate(decoded):
+            for entry in decoded:
                 # Calculate offset going backwards from newest sample
-                time_offset = (num_samples - 1 - idx) * offset_s
+                offset_idx = entry.pop("offset",0)
+                time_offset = offset_idx * offset_s
                 sample_time = base_time - datetime.timedelta(seconds=time_offset)
                 outbound_msgs.append(
                     MQTTMessage(

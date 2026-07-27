@@ -35,13 +35,10 @@ class cs01:
         # Direct mode: one sample + alarm byte
         if len(sensor_payload) == 11:
             return battery_v, [
-                {
-                    "current_ch1_a": current_a(sensor_payload[2:4]),
-                    "current_ch2_a": current_a(sensor_payload[4:6]),
-                    "current_ch3_a": current_a(sensor_payload[6:8]),
-                    "current_ch4_a": current_a(sensor_payload[8:10]),
-                    "alarm_status": sensor_payload[10],
-                },
+                {"current": current_a(sensor_payload[2:4]), "phase": "A", "offset": 0},
+                {"current": current_a(sensor_payload[4:6]), "phase": "B", "offset": 0},
+                {"current": current_a(sensor_payload[6:8]), "phase": "C", "offset": 0},
+                {"current": current_a(sensor_payload[8:10]), "phase": "N", "offset": 0},
             ]
 
         # Grouped mode: battery + N groups of 8 bytes
@@ -51,15 +48,39 @@ class cs01:
 
             for i in range(sample_count):
                 start = 2 + i * 8
-                sample = {
-                    "current_ch1_a": current_a(sensor_payload[start : start + 2]),
-                    "current_ch2_a": current_a(sensor_payload[start + 2 : start + 4]),
-                    "current_ch3_a": current_a(sensor_payload[start + 4 : start + 6]),
-                    "current_ch4_a": current_a(sensor_payload[start + 6 : start + 8]),
-                }
-                samples.append(sample)
+                samples.append(
+                    {
+                        "current": current_a(sensor_payload[start : start + 2]),
+                        "phase": "A",
+                        "offset": 1 + i - sample_count,
+                    }
+                )
+                samples.append(
+                    {
+                        "current": current_a(sensor_payload[start + 2 : start + 4]),
+                        "phase": "B",
+                        "offset": 1 + i - sample_count,
+                    }
+                )
+                samples.append(
+                    {
+                        "current": current_a(sensor_payload[start + 4 : start + 6]),
+                        "phase": "C",
+                        "offset": 1 + i - sample_count,
+                    }
+                )
+                samples.append(
+                    {
+                        "current": current_a(sensor_payload[start + 6 : start + 8]),
+                        "phase": "N",
+                        "offset": 1 + i - sample_count,
+                    }
+                )
 
             return battery_v, samples
 
         logger.warning("Unexpected payload length/layout")
         return None, []
+
+
+{"current": 1, "phase": 1, "machine": "ID"}
