@@ -23,8 +23,8 @@ class lht65n_vib:
         """
 
         if len(sensor_payload) < 11:
-            return {
-                    "error": f"Expected at least 11 sensor bytes, got {len(sensor_payload)}"
+            return None, {
+                "error": f"Expected at least 11 sensor bytes, got {len(sensor_payload)}"
             }
 
         battery_v = decoders.util.uint16_be(sensor_payload[0:2]) / 1000.0

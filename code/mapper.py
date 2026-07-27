@@ -17,9 +17,10 @@ class MQTTMessage:
     topic: str | None = None
     payload: str | None = None
     retain: bool = False
-    
+
     def to_dict(self) -> dict:
         return asdict(self)
+
 
 class LorawanMapper(multiprocessing.Process):
     def __init__(self, config, zmq_conf):
@@ -75,9 +76,7 @@ class LorawanMapper(multiprocessing.Process):
 
                 for out_msg in outbound_msgs:
                     if out_msg.topic is not None and out_msg.payload is not None:
-                        self.zmq_out.send_json(
-                            out_msg.to_dict()
-                        )
+                        self.zmq_out.send_json(out_msg.to_dict())
 
     def do_mapping(self, topic, payload_raw) -> list[MQTTMessage]:
         result = self.parser.parse(topic)
@@ -93,7 +92,7 @@ class LorawanMapper(multiprocessing.Process):
             logger.warning(f"No mapping for {device_id}")
             return []
 
-        identifier_tag = mapping.get("identifier_tag",None)
+        identifier_tag = mapping.get("identifier_tag", None)
         identifier = mapping["identifier"]
         out_msg = {"identifier": identifier}
         if identifier_tag is not None:
@@ -151,7 +150,7 @@ class LorawanMapper(multiprocessing.Process):
                         "timestamp": get_timestamp(),
                         **radio_prefix,
                     },
-                    retain=True
+                    retain=True,
                 )
             )
 
@@ -173,6 +172,8 @@ class LorawanMapper(multiprocessing.Process):
                 battery_v, decoded = decoders.sw3l.decode(payload)
             case "json_payload", "s31b":
                 battery_v, decoded = decoders.s31b.decode(payload)
+            case "bytes_payload", "s31b":
+                battery_v, decoded = decoders.s31b_ascii.decode(payload)
             case _:
                 # default
                 logger.error(
@@ -193,7 +194,7 @@ class LorawanMapper(multiprocessing.Process):
                 )
             )
 
-        match(mapping_type):
+        match (mapping_type):
             case "lht65n_vib":
                 out_topic = "vibration/{identifier}"
             case "lse01":
@@ -228,12 +229,13 @@ class LorawanMapper(multiprocessing.Process):
 
             for entry in decoded:
                 # Calculate offset going backwards from newest sample
-                offset_idx = entry.pop("offset",0)
+                offset_idx = entry.pop("offset", 0)
                 time_offset = offset_idx * offset_s
                 sample_time = base_time - datetime.timedelta(seconds=time_offset)
                 outbound_msgs.append(
                     MQTTMessage(
-                        out_topic, {**out_msg, **entry, "timestamp": sample_time.isoformat()}
+                        out_topic,
+                        {**out_msg, **entry, "timestamp": sample_time.isoformat()},
                     )
                 )
             return outbound_msgs
@@ -242,10 +244,12 @@ class LorawanMapper(multiprocessing.Process):
             logger.warning("Unexpected decoded payload type")
             return []
 
+
 def get_current_datetime():
     __dt = -1 * (time.timezone if (time.localtime().tm_isdst == 0) else time.altzone)
     tz = datetime.timezone(datetime.timedelta(seconds=__dt))
     return datetime.datetime.now(tz=tz)
+
 
 def get_timestamp():
     return get_current_datetime().isoformat()

@@ -21,7 +21,7 @@ class rs485_npk:
         """
 
         if len(sensor_payload) < 9:
-            return {
+            return None, {
                 "error": f"Expected at least 9 sensor bytes, got {len(sensor_payload)}",
             }
 
