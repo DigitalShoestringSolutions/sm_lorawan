@@ -6,7 +6,7 @@ import re
 from typing import Dict, Optional
 import time, datetime
 import decoders
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
 context = zmq.Context()
 logger = logging.getLogger("main.lorawan_mapper")
@@ -16,7 +16,10 @@ logger = logging.getLogger("main.lorawan_mapper")
 class MQTTMessage:
     topic: str | None = None
     payload: str | None = None
-
+    retain: bool = False
+    
+    def to_dict(self) -> dict:
+        return asdict(self)
 
 class LorawanMapper(multiprocessing.Process):
     def __init__(self, config, zmq_conf):
@@ -73,7 +76,7 @@ class LorawanMapper(multiprocessing.Process):
                 for out_msg in outbound_msgs:
                     if out_msg.topic is not None and out_msg.payload is not None:
                         self.zmq_out.send_json(
-                            {"topic": out_msg.topic, "payload": out_msg.payload}
+                            out_msg.to_dict()
                         )
 
     def do_mapping(self, topic, payload_raw) -> list[MQTTMessage]:
@@ -144,6 +147,7 @@ class LorawanMapper(multiprocessing.Process):
                         "timestamp": get_timestamp(),
                         **radio_prefix,
                     },
+                    retain=True
                 )
             )
 
@@ -181,6 +185,7 @@ class LorawanMapper(multiprocessing.Process):
                         "timestamp": get_timestamp(),
                         "battery_v": battery_v,
                     },
+                    retain=True,
                 )
             )
 

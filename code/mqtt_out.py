@@ -85,7 +85,6 @@ class MQTTServiceWrapper(multiprocessing.Process):
         logger.info(f'connecting to {self.url}:{self.port}')
         self.mqtt_connect(client, True)
 
-
         while terminate_flag is False:
             while self.zmq_in.poll(50, zmq.POLLIN):
                 try:
@@ -93,11 +92,11 @@ class MQTTServiceWrapper(multiprocessing.Process):
                     msg_json = json.loads(msg)
                     msg_topic = msg_json['topic']
                     msg_payload = msg_json['payload']
+                    retain = msg_json.get("retain",False)
                     topic = chevron.render(urljoin(self.topic_base, msg_topic), msg_payload)
                     logger.info(f'pub topic:{topic} msg:{msg_payload}')
-                    client.publish(topic, json.dumps(msg_payload))
+                    client.publish(topic, json.dumps(msg_payload),retain=retain)
                 except zmq.ZMQError:
                     pass
             client.loop(0.05)
         logger.info("Done")
-
