@@ -217,8 +217,10 @@ class LorawanMapper(multiprocessing.Process):
 
         # Handle multi-sample list payload (assuming decoded[0] is oldest, decoded[-1] is newest)
         elif isinstance(decoded, list):
-            offset_s = mapping.get("multi_sample_offset_s", 0)
-            base_time = get_timestamp()  # Assumes datetime object or numeric timestamp
+            offset_s = int(mapping.get("multi_sample_offset_s", 0))
+            base_time = (
+                get_current_datetime()
+            )  # Assumes datetime object or numeric timestamp
 
             num_samples = len(decoded)
             for idx, entry in enumerate(decoded):
@@ -227,7 +229,7 @@ class LorawanMapper(multiprocessing.Process):
                 sample_time = base_time - datetime.timedelta(seconds=time_offset)
                 outbound_msgs.append(
                     MQTTMessage(
-                        out_topic, {**out_msg, **entry, "timestamp": sample_time}
+                        out_topic, {**out_msg, **entry, "timestamp": sample_time.isoformat()}
                     )
                 )
             return outbound_msgs
@@ -236,11 +238,13 @@ class LorawanMapper(multiprocessing.Process):
             logger.warning("Unexpected decoded payload type")
             return []
 
-
-def get_timestamp():
+def get_current_datetime():
     __dt = -1 * (time.timezone if (time.localtime().tm_isdst == 0) else time.altzone)
     tz = datetime.timezone(datetime.timedelta(seconds=__dt))
-    return datetime.datetime.now(tz=tz).isoformat()
+    return datetime.datetime.now(tz=tz)
+
+def get_timestamp():
+    return get_current_datetime().isoformat()
 
 
 class TopicParser:
