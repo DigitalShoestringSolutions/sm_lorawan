@@ -184,11 +184,23 @@ class LorawanMapper(multiprocessing.Process):
                 )
             )
 
-        out_topic = mapping["output_topic"]
-
-        # match(mapping_type):
-        #     case "lht65n_vib":
-        #         out_topic = "a/{identifier}"
+        match(mapping_type):
+            case "lht65n_vib":
+                out_topic = "vibration/{identifier}"
+            case "lse01":
+                out_topic = "soil_moisture/{identifier}"
+            case "llms01":
+                out_topic = "leaf_moisture/{identifier}"
+            case "sw3l":
+                out_topic = "flow/{identifier}"
+            case "rs485_npk":
+                out_topic = "npk/{identifier}"
+            case "s31b":
+                out_topic = "temperature/{identifier}"
+            case "cs01":
+                out_topic = "current/{identifier}"
+            case _:
+                out_topic = mapping.get("output_topic")
 
         # Handle single dictionary payload
         if isinstance(decoded, dict):
