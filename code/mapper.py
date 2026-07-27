@@ -6,9 +6,16 @@ import re
 from typing import Dict, Optional
 import time, datetime
 import decoders
+from dataclasses import dataclass
 
 context = zmq.Context()
 logger = logging.getLogger("main.lorawan_mapper")
+
+
+@dataclass
+class MQTTMessage:
+    topic: str | None = None
+    payload: str | None = None
 
 
 class LorawanMapper(multiprocessing.Process):
@@ -58,31 +65,30 @@ class LorawanMapper(multiprocessing.Process):
                     continue
 
                 try:
-                    out_topic, out_msgs = self.do_mapping(msg_topic, msg_payload)
+                    outbound_msgs = self.do_mapping(msg_topic, msg_payload)
                 except Exception as e:
                     logger.error(f"Unhandled error during mapping: {e}", exc_info=True)
                     continue
 
-                if out_topic is not None and out_msgs is not None:
-                    if not isinstance(out_msgs, list):
-                        out_msgs = [out_msgs]
+                for out_msg in outbound_msgs:
+                    if out_msg.topic is not None and out_msg.payload is not None:
+                        self.zmq_out.send_json(
+                            {"topic": out_msg.topic, "payload": out_msg.payload}
+                        )
 
-                    for out_msg in out_msgs:
-                        self.zmq_out.send_json({"topic": out_topic, "payload": out_msg})
-
-    def do_mapping(self, topic, payload_raw):
+    def do_mapping(self, topic, payload_raw) -> list[MQTTMessage]:
         result = self.parser.parse(topic)
         device_id = result.get("DeviceID")
+        outbound_msgs = []
 
         # prefilter / early escape
         if device_id is None:
-            return None, None
-
+            return []
         # mapping on device_id
         mapping = self.mappings.get(device_id)
         if mapping is None:
             logger.warning(f"No mapping for {device_id}")
-            return None, None
+            return []
 
         out_msg = {"identifier": mapping["identifier"]}
         mapping_type = mapping["type"]
@@ -100,7 +106,9 @@ class LorawanMapper(multiprocessing.Process):
         # Check if payload is a JSON object
         try:
             parsed_json = json.loads(payload_str)
-            if isinstance(parsed_json, dict):  # Ensure it's a JSON dict, not a standalone number
+            if isinstance(
+                parsed_json, dict
+            ):  # Ensure it's a JSON dict, not a standalone number
                 envelope_json = parsed_json
                 envelope_type = "gateway_json"
         except (json.JSONDecodeError, TypeError):
@@ -113,7 +121,7 @@ class LorawanMapper(multiprocessing.Process):
                 envelope_type = "ascii_hex"
             except ValueError:
                 logger.error("Envelope is neither valid JSON nor hexstring")
-                return None, None
+                return []
 
         # handle envelope
         radio_prefix = {}
@@ -121,37 +129,63 @@ class LorawanMapper(multiprocessing.Process):
             case "gateway_json":
                 radio_prefix, payload, payload_type = parse_json_envelope(envelope_json)
             case "ascii_hex":
-                radio_prefix, payload, payload_type = parse_bytes_envelope(envelope_bytes)
+                radio_prefix, payload, payload_type = parse_bytes_envelope(
+                    envelope_bytes
+                )
 
-        out_msg["radio"] = radio_prefix
+        if (
+            "rssi_dbm" in radio_prefix or "snr_db" in radio_prefix
+        ):  # check there is a valid prefix
+            outbound_msgs.append(
+                MQTTMessage(
+                    "radio/{identifier}",
+                    {
+                        "identifier": mapping["identifier"],
+                        "timestamp": get_timestamp(),
+                        **radio_prefix,
+                    },
+                )
+            )
 
         # Decode payload based on types
         decoded = {}
 
         match (payload_type, mapping_type):
             case "bytes_payload", "lht65n_vib":
-                decoded = decoders.lht65n_vib.decode(payload)
+                battery_v, decoded = decoders.lht65n_vib.decode(payload)
             case "bytes_payload", "rs485_npk":
-                decoded = decoders.rs485_npk.decode(payload)
+                battery_v, decoded = decoders.rs485_npk.decode(payload)
             case "bytes_payload", "cs01":
-                decoded = decoders.cs01.decode(payload)
+                battery_v, decoded = decoders.cs01.decode(payload)
             case "json_payload", "llms01":
-                decoded = decoders.llms01.decode(payload)
+                battery_v, decoded = decoders.llms01.decode(payload)
             case "json_payload", "lse01":
-                decoded = decoders.lse01.decode(payload)
+                battery_v, decoded = decoders.lse01.decode(payload)
             case "json_payload", "sw3l":
-                decoded = decoders.sw3l.decode(payload)
+                battery_v, decoded = decoders.sw3l.decode(payload)
             case "json_payload", "s31b":
-                decoded = decoders.s31b.decode(payload)
+                battery_v, decoded = decoders.s31b.decode(payload)
             case _:
                 # default
                 logger.error(
                     f"Mapping implementation not found for {payload_type},{mapping_type}"
                 )
-                return None, None
-            
+                return []
+
+        if battery_v is not None:
+            outbound_msgs.append(
+                MQTTMessage(
+                    "battery/{identifier}",
+                    {
+                        "identifier": mapping["identifier"],
+                        "timestamp": get_timestamp(),
+                        "battery_v": battery_v,
+                    },
+                )
+            )
+
         out_topic = mapping["output_topic"]
-        
+
         # match(mapping_type):
         #     case "lht65n_vib":
         #         out_topic = "a/{identifier}"
@@ -161,11 +195,11 @@ class LorawanMapper(multiprocessing.Process):
             out_msg.update(decoded)
             if "timestamp" not in out_msg:
                 out_msg["timestamp"] = get_timestamp()
-            return out_topic, out_msg
+            outbound_msgs.append(MQTTMessage(out_topic, out_msg))
+            return outbound_msgs
 
         # Handle multi-sample list payload (assuming decoded[0] is oldest, decoded[-1] is newest)
         elif isinstance(decoded, list):
-            out_msgs = []
             offset_s = mapping.get("multi_sample_offset_s", 0)
             base_time = get_timestamp()  # Assumes datetime object or numeric timestamp
 
@@ -174,13 +208,16 @@ class LorawanMapper(multiprocessing.Process):
                 # Calculate offset going backwards from newest sample
                 time_offset = (num_samples - 1 - idx) * offset_s
                 sample_time = base_time - datetime.timedelta(seconds=time_offset)
-                out_msgs.append({**out_msg, **entry, "timestamp": sample_time})
-
-            return out_topic, out_msgs
+                outbound_msgs.append(
+                    MQTTMessage(
+                        out_topic, {**out_msg, **entry, "timestamp": sample_time}
+                    )
+                )
+            return outbound_msgs
 
         else:
             logger.warning("Unexpected decoded payload type")
-            return None, None
+            return []
 
 
 def get_timestamp():
@@ -231,7 +268,7 @@ class TopicParser:
         return match.groupdict() if match else {}
 
 
-def parse_json_envelope(envelope:dict):
+def parse_json_envelope(envelope: dict):
     radio = {}
     if "RSSI" in envelope:
         radio["rssi_dbm"] = envelope.get("RSSI")
@@ -255,7 +292,7 @@ def parse_json_envelope(envelope:dict):
         payload = envelope
         payload_type = "json_payload"
 
-    return radio , payload, payload_type
+    return radio, payload, payload_type
 
 
 def parse_bytes_envelope(envelope: bytes):
@@ -273,12 +310,12 @@ def parse_bytes_envelope(envelope: bytes):
     """
     radio = {}
     sensor_payload = envelope
-    
+
     if len(envelope) >= 8:
         radio = {
             "rssi_dbm": decoders.util.int32_be(envelope[0:4]),
             "snr_db": decoders.util.int32_be(envelope[4:8]) / 10.0,
         }
         sensor_payload = envelope[8:]
-    
+
     return radio, sensor_payload, "bytes_payload"

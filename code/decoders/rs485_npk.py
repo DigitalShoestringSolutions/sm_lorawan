@@ -25,8 +25,9 @@ class rs485_npk:
                 "error": f"Expected at least 9 sensor bytes, got {len(sensor_payload)}",
             }
 
-        return {
-            "battery_v": decoders.util.uint16_be(sensor_payload[0:2]) / 1000.0,
+        battery_v = decoders.util.uint16_be(sensor_payload[0:2]) / 1000.0
+
+        return battery_v, {
             "payload_version": sensor_payload[2],
             "nitrogen_mg_kg": decoders.util.uint16_be(sensor_payload[3:5]),
             "phosphorus_mg_kg": decoders.util.uint16_be(sensor_payload[5:7]),

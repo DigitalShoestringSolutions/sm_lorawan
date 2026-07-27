@@ -3,6 +3,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class cs01:
     @classmethod
     def decode(cls, sensor_payload: bytes):
@@ -24,7 +25,7 @@ class cs01:
         """
 
         if len(sensor_payload) < 2:
-            return []
+            return None, []
 
         battery_v = util.uint16_be(sensor_payload[0:2]) / 1000.0
 
@@ -33,10 +34,8 @@ class cs01:
 
         # Direct mode: one sample + alarm byte
         if len(sensor_payload) == 11:
-            return [
+            return battery_v, [
                 {
-                    "battery_v": battery_v,
-                    # "mode": "direct",
                     "current_ch1_a": current_a(sensor_payload[2:4]),
                     "current_ch2_a": current_a(sensor_payload[4:6]),
                     "current_ch3_a": current_a(sensor_payload[6:8]),
@@ -53,7 +52,6 @@ class cs01:
             for i in range(sample_count):
                 start = 2 + i * 8
                 sample = {
-                    "battery_v": battery_v,
                     "current_ch1_a": current_a(sensor_payload[start : start + 2]),
                     "current_ch2_a": current_a(sensor_payload[start + 2 : start + 4]),
                     "current_ch3_a": current_a(sensor_payload[start + 4 : start + 6]),
@@ -61,7 +59,7 @@ class cs01:
                 }
                 samples.append(sample)
 
-            return samples
+            return battery_v, samples
 
         logger.warning("Unexpected payload length/layout")
-        return []
+        return None, []

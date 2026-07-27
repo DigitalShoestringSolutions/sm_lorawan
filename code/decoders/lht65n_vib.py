@@ -22,7 +22,6 @@ class lht65n_vib:
             bytes 7:11 = work_min
         """
 
-
         if len(sensor_payload) < 11:
             return {
                     "error": f"Expected at least 11 sensor bytes, got {len(sensor_payload)}"
@@ -36,7 +35,6 @@ class lht65n_vib:
         tdc = bool(flag & 0x02)
 
         decoded_data = {
-            "battery_v": battery_v,
             "vib_mode": vib_mode,
             "alarm": alarm,
             "tdc": tdc,
@@ -65,4 +63,4 @@ class lht65n_vib:
             decoded_data["warning"] = f"Unsupported or unexpected VIB mode: {vib_mode}"
             decoded_data["sensor_payload_hex"] = sensor_payload.hex()
 
-        return decoded_data
+        return battery_v, decoded_data

@@ -4,8 +4,7 @@ class llms01:
     @classmethod
     def decode(cls,payload:dict):
         battery_v = util.get_battery_v(payload)
-        return {
-            "battery_v": battery_v,
+        return battery_v, {
             "leaf_moisture": payload.get("Leaf_Moisture"),
             "leaf_temperature_c": payload.get("Leaf_Temperature"),
             "external_temperature_c": payload.get("Temp_DS18B20"),
