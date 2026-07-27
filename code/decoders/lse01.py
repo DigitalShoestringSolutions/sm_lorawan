@@ -6,7 +6,7 @@ class lse01:
         battery_v = util.get_battery_v(payload)
         return battery_v, {
             "soil_temperature_c": payload.get("Temp_SOIL"),
-            "soil_water": payload.get("Water_SOIL"),
+            "soil_moisture": payload.get("Water_SOIL"),
             "soil_conductivity": payload.get("Conduct_SOIL"),
             "external_temperature_c": payload.get("Temp_DS18B20"),
             "sensor_flag": payload.get("Sensor_flag"),
