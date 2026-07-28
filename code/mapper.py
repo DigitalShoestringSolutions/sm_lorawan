@@ -144,7 +144,7 @@ class LorawanMapper(multiprocessing.Process):
         ):  # check there is a valid prefix
             outbound_msgs.append(
                 MQTTMessage(
-                    "radio/{identifier}",
+                    "radio/{{identifier}}",
                     {
                         "identifier": identifier,
                         "timestamp": get_timestamp(),
@@ -184,7 +184,7 @@ class LorawanMapper(multiprocessing.Process):
         if battery_v is not None:
             outbound_msgs.append(
                 MQTTMessage(
-                    "battery/{identifier}",
+                    "battery/{{identifier}}",
                     {
                         "identifier": identifier,
                         "timestamp": get_timestamp(),
@@ -196,19 +196,19 @@ class LorawanMapper(multiprocessing.Process):
 
         match (mapping_type):
             case "lht65n_vib":
-                out_topic = "vibration/{identifier}"
+                out_topic = "vibration/{{identifier}}"
             case "lse01":
-                out_topic = "soil_moisture/{identifier}"
+                out_topic = "soil_moisture/{{identifier}}"
             case "llms01":
-                out_topic = "leaf_moisture/{identifier}"
+                out_topic = "leaf_moisture/{{identifier}}"
             case "sw3l":
-                out_topic = "flow/{identifier}"
+                out_topic = "flow/{{identifier}}"
             case "rs485_npk":
-                out_topic = "npk/{identifier}"
+                out_topic = "npk/{{identifier}}"
             case "s31b":
-                out_topic = "temperature/{identifier}"
+                out_topic = "temperature/{{identifier}}"
             case "cs01":
-                out_topic = "power_monitoring/{identifier}/{phase}"
+                out_topic = "power_monitoring/{{identifier}}/{{phase}}"
             case _:
                 out_topic = mapping.get("output_topic")
 
