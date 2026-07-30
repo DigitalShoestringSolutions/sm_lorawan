@@ -27,19 +27,38 @@ class cs01:
         if len(sensor_payload) < 2:
             return None, []
 
-        battery_v = util.uint16_be(sensor_payload[0:2]) / 1000.0
+        garbage_counter = 0
+
+        battery_v = (util.uint16_be(sensor_payload[0:2]) & 0x3FFF) / 1000.0
 
         def current_a(raw2):
-            return util.uint16_be(raw2) / 100.0
+            nonlocal garbage_counter
+            val = util.uint16_be(raw2) / 100.0
+            if val > 300:
+                garbage_counter += 1
+            return val
+
+        if battery_v > 6:
+            garbage_counter += 1
 
         # Direct mode: one sample + alarm byte
         if len(sensor_payload) == 11:
-            return battery_v, [
+            payload = [
                 {"current": current_a(sensor_payload[2:4]), "phase": "A", "offset": 0},
                 {"current": current_a(sensor_payload[4:6]), "phase": "B", "offset": 0},
                 {"current": current_a(sensor_payload[6:8]), "phase": "C", "offset": 0},
-                {"current": current_a(sensor_payload[8:10]), "phase": "N", "offset": 0},
             ]
+
+            neutral = {
+                "current": current_a(sensor_payload[8:10]),
+                "phase": "N",
+                "offset": 0,
+            }  # not used - but parsed to trigger garbage counter
+
+            if garbage_counter >= 2:
+                logger.warning(f"Discarded as garbage reading [{garbage_counter}]")
+                return None, []
+            return battery_v, payload
 
         # Grouped mode: battery + N groups of 8 bytes
         if len(sensor_payload) > 2 and (len(sensor_payload) - 2) % 8 == 0:
@@ -69,18 +88,20 @@ class cs01:
                         "offset": 1 + i - sample_count,
                     }
                 )
-                samples.append(
-                    {
-                        "current": current_a(sensor_payload[start + 6 : start + 8]),
-                        "phase": "N",
-                        "offset": 1 + i - sample_count,
-                    }
-                )
+
+                neutral = {
+                    "current": current_a(sensor_payload[start + 6 : start + 8]),
+                    "phase": "N",
+                    "offset": 0,
+                }  # not used - but parsed to trigger garbage counter
+
+                # samples.append(neutral)
+
+            if garbage_counter >= 2:
+                logger.warning(f"Discarded as garbage reading [{garbage_counter}]")
+                return None, []
 
             return battery_v, samples
 
         logger.warning("Unexpected payload length/layout")
         return None, []
-
-
-{"current": 1, "phase": 1, "machine": "ID"}
