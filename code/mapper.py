@@ -158,22 +158,35 @@ class LorawanMapper(multiprocessing.Process):
         decoded = {}
 
         match (payload_type, mapping_type):
+            # lht65n_vib
             case "bytes_payload", "lht65n_vib":
                 battery_v, decoded = decoders.lht65n_vib.decode(payload)
+            # rs485_npk
             case "bytes_payload", "rs485_npk":
                 battery_v, decoded = decoders.rs485_npk.decode(payload)
+            # cs01
             case "bytes_payload", "cs01":
                 battery_v, decoded = decoders.cs01.decode(payload)
+            # llms01
+            case "bytes_payload", "llms01_ascii":
+                battery_v, decoded = decoders.llms01_ascii.decode(payload)
             case "json_payload", "llms01":
                 battery_v, decoded = decoders.llms01.decode(payload)
+            # lse01
+            case "bytes_payload", "lse01":
+                battery_v, decoded = decoders.lse01_ascii.decode(payload)
             case "json_payload", "lse01":
                 battery_v, decoded = decoders.lse01.decode(payload)
+            # sw3l
+            case "bytes_payload", "sw3l":
+                battery_v, decoded = decoders.sw3l_ascii.decode(payload)
             case "json_payload", "sw3l":
                 battery_v, decoded = decoders.sw3l.decode(payload)
-            case "json_payload", "s31b":
-                battery_v, decoded = decoders.s31b.decode(payload)
+            # s31b
             case "bytes_payload", "s31b":
                 battery_v, decoded = decoders.s31b_ascii.decode(payload)
+            case "json_payload", "s31b":
+                battery_v, decoded = decoders.s31b.decode(payload)
             case _:
                 # default
                 logger.error(

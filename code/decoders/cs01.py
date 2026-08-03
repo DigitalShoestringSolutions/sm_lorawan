@@ -61,7 +61,7 @@ class cs01:
             return battery_v, payload
 
         # Grouped mode: battery + N groups of 8 bytes
-        if len(sensor_payload) > 2 and (len(sensor_payload) - 2) % 8 == 0:
+        if (len(sensor_payload) - 2) % 8 == 0:
             sample_count = (len(sensor_payload) - 2) // 8
             samples = []
 
