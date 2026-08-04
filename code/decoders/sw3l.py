@@ -25,7 +25,7 @@ class sw3l_ascii:
 
         flag_byte = sensor_payload[0]
         calculate_byte = (flag_byte & 0b11111100)>2
-        total_pulse = util.uint32_be(sensor_payload[1:5]) / 1000.0
+        total_pulse = util.uint32_be(sensor_payload[1:5])
 
         match calculate_byte:
             case 0:

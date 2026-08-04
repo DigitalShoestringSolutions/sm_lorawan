@@ -7,7 +7,7 @@ class llms01:
         return battery_v, {
             "leaf_moisture": payload.get("Leaf_Moisture"),
             "leaf_temperature_c": payload.get("Leaf_Temperature"),
-            "external_temperature_c": payload.get("Temp_DS18B20"),
+            # "external_temperature_c": payload.get("Temp_DS18B20"),
             # "message_type": payload.get("Message_type"),
             # "interrupt_flag": payload.get("Interrupt_flag"),
         }
@@ -30,5 +30,5 @@ class llms01_ascii:
         return battery_v, {
             "leaf_moisture":leaf_moisture,
             "leaf_temperature_c": leaf_temperature_c,
-            "external_temperature_c": external_temperature_c,
+            # "external_temperature_c": external_temperature_c,
         }
