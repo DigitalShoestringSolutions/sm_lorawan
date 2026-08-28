@@ -22,6 +22,7 @@
     volume.data.ignore = true
     volume.user_config.ignore = true
     ports.bridge = 1700
+    udp_port.bridge = true
 [redis]
     dockerfile = "redis.Dockerfile"
     compose_partial = "redis.snippet.yml"

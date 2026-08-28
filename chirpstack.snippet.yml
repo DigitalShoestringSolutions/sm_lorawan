@@ -1,3 +1,4 @@
 build: "placeholder"
+user: $CURRENT_UID
 command: ["--config", "/etc/chirpstack"]
 container_name: lora-chirpstack
