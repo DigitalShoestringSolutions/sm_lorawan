@@ -7,7 +7,7 @@
 [lora-setup]
     dockerfile = "setup.Dockerfile"
     compose_partial = "setup.snippet.yml"
-    volume.data.ignore = true
+    volume.data.path = "/app/data"
     volume.user_config.ignore = true
     ports.ui=5000
 [chirpstack]

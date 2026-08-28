@@ -1,10 +1,16 @@
-from bottle import Bottle, request, response, static_file
-import grpc
-from chirpstack_api import api, common
 import os
 import logging
 import datetime
 import re
+
+import grpc
+from cheroot.ssl.builtin import BuiltinSSLAdapter
+from cheroot.wsgi import Server
+from chirpstack_api import api, common
+from bottle import Bottle, request, response, static_file
+
+
+import subprocess
 
 HEX16_RE = re.compile(r"^[0-9a-fA-F]{16}$")
 HEX32_RE = re.compile(r"^[0-9a-fA-F]{32}$")
@@ -30,6 +36,9 @@ logging.basicConfig(level=logging.INFO, force=True)
 CHIRPSTACK_SERVER = "lora-chirpstack:8080"
 API_TOKEN = "YOUR_CHIRPSTACK_API_KEY"
 DIST_DIR = os.path.abspath("/app/frontend/dist")
+
+CERT_FILE = os.path.abspath("/app/data/cert.pem")
+KEY_FILE = os.path.abspath("/app/data/key.pem")
 
 channel = grpc.insecure_channel(CHIRPSTACK_SERVER)
 
@@ -393,6 +402,55 @@ def queue_downlink():
 # ==============================================================================
 
 
+def ensure_certificates(cert_path, key_path):
+    """Generates a self-signed TLS certificate and private key if they do not exist."""
+    if not os.path.exists(cert_path) or not os.path.exists(key_path):
+        logger.info(
+            "SSL certificates missing. Auto-generating self-signed certificate..."
+        )
+        try:
+            subprocess.run(
+                [
+                    "openssl",
+                    "req",
+                    "-x509",
+                    "-newkey",
+                    "rsa:2048",
+                    "-nodes",
+                    "-out",
+                    cert_path,
+                    "-keyout",
+                    key_path,
+                    "-days",
+                    "3650",  # 10 years validity
+                    "-subj",
+                    "/CN=device-portal",
+                ],
+                check=True,
+                capture_output=True,
+            )
+            logger.info(f"Successfully created '{cert_path}' and '{key_path}'.")
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            logger.error(f"Failed to generate SSL certificates via openssl: {e}")
+            raise
+
+
 if __name__ == "__main__":
     init_chirpstack()
-    app.run(host="0.0.0.0", port=5000)
+
+    # Auto-create cert.pem and key.pem if missing
+    ensure_certificates(CERT_FILE, KEY_FILE)
+
+    # Instantiate Cheroot multi-threaded WSGI server
+    server = Server(("0.0.0.0", 5000), app)
+
+    # Bind the SSL certificate and private key
+    server.ssl_adapter = BuiltinSSLAdapter(certificate=CERT_FILE, private_key=KEY_FILE)
+
+    logger.info("Starting HTTPS portal on https://0.0.0.0:5000")
+
+    try:
+        server.start()
+    except KeyboardInterrupt:
+        logger.info("Stopping portal server...")
+        server.stop()
