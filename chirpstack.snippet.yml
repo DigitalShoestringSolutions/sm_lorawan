@@ -1,4 +1,5 @@
 build: "placeholder"
-user: $CURRENT_UID
 command: ["--config", "/etc/chirpstack"]
 container_name: lora-chirpstack
+environment:
+ -  MQTT_BROKER_HOST=lora-mqtt
