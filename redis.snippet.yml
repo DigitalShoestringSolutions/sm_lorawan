@@ -1,0 +1,3 @@
+build: "placeholder"
+container_name: lora-redis
+command: ["redis-server","--save","", "--appendonly", "no" ,"--maxmemory", "32mb", "--maxmemory-policy", "volatile-lru"]

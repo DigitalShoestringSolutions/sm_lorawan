@@ -2,11 +2,8 @@ from paho.mqtt.client import Client as MQTTClient, CallbackAPIVersion
 import multiprocessing
 import logging
 import zmq
-import json
-import chevron
 import time
 import signal
-from urllib.parse import urljoin
 
 context = zmq.Context()
 logger = logging.getLogger("main.mqtt_in")
@@ -37,6 +34,7 @@ class MQTTInputWrapper(multiprocessing.Process):
         self.limit = mqtt_conf_reconnect.get("limit", 60)
 
         self.subscriptions = mqtt_conf.get("subscriptions", [])
+        self.subscriptions.append("application/+/device/+/event/up")    # chirpstack default
 
         # declarations
         self.zmq_conf = zmq_conf

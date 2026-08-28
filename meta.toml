@@ -1,7 +1,34 @@
 
-[lora]
-    dockerfile = "Dockerfile"
-    compose_partial = "snippet.yml"
+[lora-mapper]
+    dockerfile = "mapper.Dockerfile"
+    compose_partial = "mapper.snippet.yml"
     volume.data.ignore = true
     volume.user_config.path = "/app/user_config"
-    
+[lora-setup]
+    dockerfile = "setup.Dockerfile"
+    compose_partial = "setup.snippet.yml"
+    volume.data.ignore = true
+    volume.user_config.ignore = true
+    ports.ui=5000
+[chirpstack]
+    dockerfile = "chirpstack.Dockerfile"
+    compose_partial = "chirpstack.snippet.yml"
+    volume.data.path = "/var/lib/chirpstack"
+    volume.user_config.ignore =true
+    ports.ui = 8080
+[chirpstack-udp-bridge]
+    dockerfile="chirpstack-bridge.Dockerfile"
+    compose_partial = "chirpstack-bridge.snippet.yml"
+    volume.data.ignore = true
+    volume.user_config.ignore = true
+    ports.bridge = 1700
+[redis]
+    dockerfile = "redis.Dockerfile"
+    compose_partial = "redis.snippet.yml"
+    volume.data.ignore = true
+    volume.user_config.ignore = true
+[lora-mqtt]
+    dockerfile = "mqtt.Dockerfile"
+    compose_partial = "mqtt.snippet.yml"
+    volume.data.ignore = true
+    volume.user_config.ignore = true

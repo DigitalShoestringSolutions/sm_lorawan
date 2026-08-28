@@ -1,3 +1,2 @@
 build: "placeholder"
 command: ["python","main.py","--log","{{log_level}}"]
-privileged: true

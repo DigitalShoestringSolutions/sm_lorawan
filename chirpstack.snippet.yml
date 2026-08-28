@@ -1,0 +1,3 @@
+build: "placeholder"
+command: ["--config", "/etc/chirpstack"]
+container_name: lora-chirpstack

@@ -1,0 +1,3 @@
+bottle==0.13.4
+chirpstack-api==4.9.0
+grpcio==1.83.0

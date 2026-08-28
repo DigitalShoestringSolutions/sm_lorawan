@@ -23,11 +23,11 @@
 
 FROM python:3.13
 
-COPY ./code/requirements.txt /
+COPY ./mapper/requirements.txt /
 RUN pip3 install -r requirements.txt
 WORKDIR /app
 COPY --from=solution_config module_config/ /app/module_config
-ADD ./code/ /app
+ADD ./mapper/ /app
 
 
 CMD [ "python3", "/app/main.py"]
