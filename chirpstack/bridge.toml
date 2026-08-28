@@ -1,10 +1,16 @@
 [integration.mqtt]
-  server="tcp://lora-mqtt:1883"
-  # Must match the region topic prefix in chirpstack.toml (e.g., eu868, us915_0)
   topic_prefix="eu868"
   event_topic_template="eu868/gateway/{{ .GatewayID }}/event/{{ .EventType }}"
   state_topic_template="eu868/gateway/{{ .GatewayID }}/state/{{ .StateType }}"
   command_topic_template="eu868/gateway/{{ .GatewayID }}/command/#"
+
+[integration.mqtt.auth]
+  type="generic"
+
+[integration.mqtt.auth.generic]
+  servers=["tcp://lora-mqtt:1883"]
+  username=""
+  password=""
 
 [backend.udp]
   bind="0.0.0.0:1700"
