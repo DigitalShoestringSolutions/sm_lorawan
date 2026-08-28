@@ -5,11 +5,11 @@
   path="sqlite:///var/lib/chirpstack/chirpstack.sqlite"
 
 [redis]
-  url="redis://lora-redis:6379"
+  servers=["redis://lora-redis:6379/"]
 
 [network]
   net_id="000000"
-  enabled_regions=["eu868"] # Replace with your region
+  enabled_regions=["eu868"]
 
 [integration]
   enabled=["mqtt"]
