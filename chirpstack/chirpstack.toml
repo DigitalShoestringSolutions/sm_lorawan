@@ -11,9 +11,6 @@
   net_id="000000"
   enabled_regions=["eu868"]
 
-[regions.gateway.backend.mqtt]
-  server="tcp://lora-mqtt:1883" 
-
 [integration]
   enabled=["mqtt"]
 
