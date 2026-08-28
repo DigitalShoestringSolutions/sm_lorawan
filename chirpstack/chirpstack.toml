@@ -17,3 +17,5 @@
   [integration.mqtt]
     server="tcp://lora-mqtt:1883"
     json=true
+  
+# newline needed after this because chirpstack's merging is rubbish
