@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const HOST = typeof window !== 'undefined' ? document.location.host : 'localhost:5000';
-const BASE_URL = `http://${HOST}`;
+const BASE_URL = `https://${HOST}`;
 
 export const APIBackend = {
     api_get: async (url) => {
