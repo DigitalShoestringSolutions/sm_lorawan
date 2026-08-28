@@ -1,1 +1,2 @@
 build: "placeholder"
+command: ["--config", "/etc/chirpstack-gateway-bridge/chirpstack-gateway-bridge.toml"]
