@@ -1,8 +1,9 @@
 import decoders.util as util
 
 class tc01:
+
     @classmethod
-    def decode(cls, sensor_payload: bytes):
+    def decode(cls, sensor_payload: bytes, fport: int):
 
         if len(sensor_payload) < 10:
             return None, {

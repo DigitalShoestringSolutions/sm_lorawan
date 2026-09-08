@@ -13,8 +13,9 @@ import decoders.util as util
 
 
 class lse01:
+
     @classmethod
-    def decode(cls, sensor_payload: bytes):
+    def decode(cls, sensor_payload: bytes, fport: int):
 
         if len(sensor_payload) < 11:
             return None, {

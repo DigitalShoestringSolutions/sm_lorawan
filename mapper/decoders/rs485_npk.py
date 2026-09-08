@@ -2,8 +2,9 @@ import decoders.util
 
 
 class rs485_npk:
+
     @classmethod
-    def decode(cls, sensor_payload: bytes):
+    def decode(cls, sensor_payload: bytes, fport: int):
         """
         RS485-LB + DFRobot NPK raw payload after gateway RSSI/SNR prefix.
 

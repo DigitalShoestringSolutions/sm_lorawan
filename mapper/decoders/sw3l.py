@@ -15,8 +15,9 @@ import decoders.util as util
 
 
 class sw3l:
+
     @classmethod
-    def decode(cls, sensor_payload: bytes):
+    def decode(cls, sensor_payload: bytes, fport: int):
 
         if len(sensor_payload) < 11:
             return None, {

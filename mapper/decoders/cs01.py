@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 class cs01:
     @classmethod
-    def decode(cls, sensor_payload: bytes):
+    def decode(cls, sensor_payload: bytes,fport:int):
         """
         CS01-LB/LS current monitor raw payload after gateway RSSI/SNR prefix.
 

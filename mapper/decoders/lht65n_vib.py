@@ -2,8 +2,9 @@ import decoders.util
 
 
 class lht65n_vib:
+
     @classmethod
-    def decode(cls, sensor_payload: bytes):
+    def decode(cls, sensor_payload: bytes, fport: int):
         """
         LHT65N-VIB raw payload after gateway RSSI/SNR prefix.
 

@@ -120,6 +120,9 @@ class LorawanMapper(multiprocessing.Process):
         device_info = chirpstack_json.get("deviceInfo", {})
         msg_timestamp = chirpstack_json.get("time")
 
+        # Extract fPort (ChirpStack v4 uses 'fPort', fall back to 'f_port' for v3)
+        f_port = chirpstack_json.get("fPort", chirpstack_json.get("f_port"))
+
         # extract identifier and device_type
         identifier = device_info.get("deviceName")
 
@@ -132,6 +135,13 @@ class LorawanMapper(multiprocessing.Process):
             )
             return []
 
+        # Filter MAC-layer commands / control frames (fPort 0 or missing fPort)
+        if f_port is None or f_port == 0:
+            logger.debug(
+                f"Skipping MAC layer frame or missing fPort (fPort={f_port}) for {identifier}"
+            )
+            return []
+                
         # handle radio strength
         rx_info = chirpstack_json.get("rxInfo")
         radio_strength = parse_chirpstack_rxInfo(rx_info)
@@ -167,7 +177,7 @@ class LorawanMapper(multiprocessing.Process):
             )
             return outbound_msgs
 
-        battery_v, decoded = decoder_module.decode(lora_payload_bytes)
+        battery_v, decoded = decoder_module.decode(lora_payload_bytes,f_port)
 
         # 6. Send battery message
         if battery_v is not None:
