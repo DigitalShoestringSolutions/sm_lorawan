@@ -594,7 +594,6 @@ const DEVICE_SPECIFIC_PRESETS = {
                 },
             ],
             buildPayload: (vals) => {
-                // TC01 stores high threshold in 0.1°C units (100°C = 1000 = 0x03E8)
                 const temp = Math.round(parseFloat(vals.tempVal || 0) * 10);
                 const raw16 = temp < 0 ? 0xffff + temp + 1 : temp;
                 const hexVal = (raw16 & 0xffff).toString(16).padStart(4, '0').toUpperCase();
@@ -621,6 +620,73 @@ const DEVICE_SPECIFIC_PRESETS = {
             buildPayload: (vals) => {
                 const amps = parseInt(vals.currentVal || 10, 10);
                 return `0B${amps.toString(16).padStart(4, '0').toUpperCase()}`;
+            },
+        },
+    ],
+    ivs_ln: [
+        {
+            id: 'ivs_vibe_config',
+            label: 'Set Sampling Items, Count & Interval (AT+VIBE)...',
+            fields: [
+                {
+                    key: 'enableVelocity',
+                    label: 'Velocity (Mask Bit 1)',
+                    controlType: 'checkbox',
+                    defaultValue: true,
+                },
+                {
+                    key: 'enableDisplacement',
+                    label: 'Displacement (Mask Bit 2)',
+                    controlType: 'checkbox',
+                    defaultValue: true,
+                },
+                {
+                    key: 'enableAcceleration',
+                    label: 'Acceleration (Mask Bit 4)',
+                    controlType: 'checkbox',
+                    defaultValue: true,
+                },
+                {
+                    key: 'enableFrequency',
+                    label: 'Frequency (Mask Bit 8)',
+                    controlType: 'checkbox',
+                    defaultValue: true,
+                },
+                {
+                    key: 'sampleCount',
+                    label: 'Number of Samples (MC)',
+                    controlType: 'number',
+                    defaultValue: 3,
+                    min: 1,
+                    max: 55,
+                    unit: 'samples',
+                },
+                {
+                    key: 'sampleInterval',
+                    label: 'Sampling Interval (ST)',
+                    controlType: 'number',
+                    defaultValue: 1000,
+                    min: 100,
+                    max: 50000,
+                    step: 100,
+                    unit: 'ms',
+                },
+            ],
+            buildPayload: (vals) => {
+                let mask = 0;
+                if (vals.enableVelocity) mask |= 1;
+                if (vals.enableDisplacement) mask |= 2;
+                if (vals.enableAcceleration) mask |= 4;
+                if (vals.enableFrequency) mask |= 8;
+
+                const count = Math.min(55, Math.max(1, parseInt(vals.sampleCount ?? 3, 10)));
+                const interval = Math.min(50000, Math.max(100, parseInt(vals.sampleInterval ?? 1000, 10)));
+
+                const maskHex = mask.toString(16).padStart(2, '0').toUpperCase();
+                const countHex = count.toString(16).padStart(2, '0').toUpperCase();
+                const intervalHex = interval.toString(16).padStart(4, '0').toUpperCase();
+
+                return `B0${maskHex}${countHex}${intervalHex}`;
             },
         },
     ],
@@ -775,7 +841,20 @@ function SetupTab({ initialDevEui }) {
                                 </span>
                                 {activePreset.fields.map((field) => (
                                     <Form.Group key={field.key} className="mb-2">
-                                        <Form.Label className="small mb-1">{field.label}</Form.Label>
+                                        {field.controlType !== 'checkbox' && (
+                                            <Form.Label className="small mb-1">{field.label}</Form.Label>
+                                        )}
+
+                                        {field.controlType === 'checkbox' && (
+                                            <Form.Check
+                                                type="checkbox"
+                                                id={`field-${field.key}`}
+                                                label={field.label}
+                                                className="small"
+                                                checked={Boolean(presetParams[field.key] ?? field.defaultValue)}
+                                                onChange={(e) => handleParamChange(field.key, e.target.checked)}
+                                            />
+                                        )}
 
                                         {field.controlType === 'select' && (
                                             <Form.Select
