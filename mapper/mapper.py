@@ -31,24 +31,28 @@ DECODER_MAPPINGS = {
     "lse01": decoders.lse01,
     "sw3l": decoders.sw3l,
     "s31b": decoders.s31b,
+    "tc01": decoders.tc01,
+    "ivs_ln": decoders.ivs_ln,
 }
 
 TOPIC_MAPPINGS = {
     "lht65n_vib": "vibration/{{identifier}}",
+    "ivs_ln": "vibration/{{identifier}}",
     "rs485_npk": "npk/{{identifier}}",
     "cs01": "power_monitoring/{{identifier}}",
     "llms01": "leaf_moisture/{{identifier}}",
     "lse01": "soil_moisture/{{identifier}}",
     "sw3l": "flow/{{identifier}}",
     "s31b": "temperature/{{identifier}}",
+    "tc01": "temperature/{{identifier}}",
 }
 
 
 class LorawanMapper(multiprocessing.Process):
     def __init__(self, config, zmq_conf):
         super().__init__()
-        
-        self.config = config.get("mapper",[])
+
+        self.config = config.get("mapper", [])
 
         # declarations
         self.zmq_conf = zmq_conf
@@ -130,7 +134,7 @@ class LorawanMapper(multiprocessing.Process):
 
         # handle radio strength
         rx_info = chirpstack_json.get("rxInfo")
-        radio_strength= parse_chirpstack_rxInfo(rx_info)
+        radio_strength = parse_chirpstack_rxInfo(rx_info)
 
         outbound_msgs.append(
             MQTTMessage(
@@ -183,10 +187,11 @@ class LorawanMapper(multiprocessing.Process):
         topic_template = TOPIC_MAPPINGS.get(device_type)
         if topic_template is None:
             topic_template = "telemetry/{{identifier}}"
-            logger.warning(f"No topic mapping for device type {device_type} - falling back to '{topic_template}'")
+            logger.warning(
+                f"No topic mapping for device type {device_type} - falling back to '{topic_template}'"
+            )
 
-
-        device_type_conf = self.config.get(device_type,{})
+        device_type_conf = self.config.get(device_type, {})
 
         out_msg = {"identifier": identifier}
 

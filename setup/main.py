@@ -25,6 +25,7 @@ ALLOWED_DEVICE_TYPES = {
     "sw3l",
     "s31b",
     "tc01",
+    "ivs_ln",
 }
 
 logger = logging.getLogger(__name__)
