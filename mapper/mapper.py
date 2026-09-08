@@ -37,7 +37,7 @@ DECODER_MAPPINGS = {
 
 TOPIC_MAPPINGS = {
     "lht65n_vib": "vibration/{{identifier}}",
-    "ivs_ln": "vibration/{{identifier}}",
+    "ivs_ln": "vibration/3axis/{{identifier}}",
     "rs485_npk": "npk/{{identifier}}",
     "cs01": "power_monitoring/{{identifier}}",
     "llms01": "leaf_moisture/{{identifier}}",
