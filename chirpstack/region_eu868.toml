@@ -306,3 +306,5 @@
       frequency = 867900000
       min_dr = 0
       max_dr = 5
+      
+# newline needed after this because chirpstack's merging is rubbish
